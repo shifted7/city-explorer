@@ -1,0 +1,22 @@
+{
+  "name": "city-explorer",
+  "version": "1.0.0",
+  "description": "**Author** Andrew Casper **Collaborators** Alex P day 1 lab-06 **Version** 1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shifted7/city-explorer.git"
+  },
+  "author": "Andrew Casper",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shifted7/city-explorer/issues"
+  },
+  "homepage": "https://github.com/shifted7/city-explorer#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
