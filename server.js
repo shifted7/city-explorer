@@ -10,7 +10,7 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3001;
 
-app.get('/locations', (request, response)=>{
+app.get('/location', (request, response)=>{
     try{
     let cityQuery = request.query.city;
     let geoData = require('./data/geo.json');
