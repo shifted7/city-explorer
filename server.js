@@ -17,6 +17,6 @@ app.get('/locations', (request, response)=>{
     // response.send(location);
 })
 
-app.listen(port, ()=>{
+app.listen(PORT, ()=>{
     console.log(`listening on ${PORT}`);
 })
