@@ -35,14 +35,10 @@ function City(city, obj){
 }
 
 app.get('/weather', (request,response)=>{
-    let weather = [];
-    let latQuery = request.query.latitude;
-    let lonQuery = request.query.longitude;
     let weatherData = require('./data/darksky.json');
     let dailyWeatherData = weatherData.daily.data;
-    dailyWeatherData.forEach(day => {
-        let newWeather = new Weather(day);
-        weather.push(newWeather);
+    let weather = dailyWeatherData.map(day => {
+        return new Weather(day);
     })
     response.send(weather);
 });
