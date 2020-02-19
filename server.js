@@ -8,21 +8,21 @@ require('dotenv').config();
 const cors = require('cors');
 app.use(cors());
 
+const superagent = require('superagent');
+
 const PORT = process.env.PORT || 3001;
 
 app.get('/location', (request, response)=>{
-    try{
     let cityQuery = request.query.city;
-    let geoData = require('./data/geo.json');
-    let newCity = new City(cityQuery, geoData[0]);
-    console.log(request);
-    console.log(newCity);
-    response.send(newCity);
-    }
-    catch (err){
-        response.status(500).send('Sorry, something went wrong');
-    }
-})
+    let url = `https://us1.locationiq.com/v1/search.php?key=${process.env.GEOCODE_API_KEY}&q=${cityQuery}&format=json`;
+    superagent.get(url)
+        .then(results=>{
+            console.log(results.body);
+            let geoData = results.body;
+            let newCity = new City(cityQuery, geoData[0]);
+            response.send(newCity);
+        });
+});
 
 function City(city, obj){
     this.search_query = city;
@@ -32,7 +32,6 @@ function City(city, obj){
 }
 
 app.get('/weather', (request,response)=>{
-    try{
     let weather = [];
     let latQuery = request.query.latitude;
     let lonQuery = request.query.longitude;
@@ -44,22 +43,13 @@ app.get('/weather', (request,response)=>{
         weather.push(newWeather);
     })
     response.send(weather);
-    } catch(err){
-        response.status(500).send('Sorry, something went wrong');
-    }
-
-})
+});
 
 function Weather(obj){
     this.forecast = obj.summary;
     this.time = new Date(obj.time * 1000).toString().slice(0,15);
 }
 
-function Error(obj){
-    this.status=500;
-    this
-}
-
 app.listen(PORT, ()=>{
     console.log(`listening on ${PORT}`);
-})
+});
