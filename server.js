@@ -17,10 +17,13 @@ app.get('/location', (request, response)=>{
     let url = `https://us1.locationiq.com/v1/search.php?key=${process.env.GEOCODE_API_KEY}&q=${cityQuery}&format=json`;
     superagent.get(url)
         .then(results=>{
-            console.log(results.body);
             let geoData = results.body;
             let newCity = new City(cityQuery, geoData[0]);
             response.send(newCity);
+        })
+        .catch(err=>{
+            console.error(err);
+            response.status(500).send('Sorry, something went wrong');
         });
 });
 
@@ -39,7 +42,6 @@ app.get('/weather', (request,response)=>{
     let dailyWeatherData = weatherData.daily.data;
     dailyWeatherData.forEach(day => {
         let newWeather = new Weather(day);
-        console.log(newWeather);
         weather.push(newWeather);
     })
     response.send(weather);
