@@ -2,18 +2,33 @@
 
 const express = require('express');
 const app = express();
+const pg = require('pg');
 
 require('dotenv').config();
 
 const cors = require('cors');
 app.use(cors());
 
+const client = new pg.Client(process.env.DATABASE_URL);
+client.on('error', err=>console.error(err));
 const superagent = require('superagent');
 
 const PORT = process.env.PORT || 3001;
 
 app.get('/location', (request, response)=>{
   let cityQuery = request.query.city;
+  console.log(cityQuery);
+  
+  let SQLget = 'SELECT * FROM locations WHERE search_query="seattle"';
+  let safeValues = [cityQuery];
+  client.query(SQLget)
+    .then(results=>{
+      console.log(results.rows);
+    })
+    .catch(err=>{
+      console.error(err);
+      response.status(500).send(err);
+    });
   let url = `https://us1.locationiq.com/v1/search.php?key=${process.env.GEOCODE_API_KEY}&q=${cityQuery}&format=json`;
   superagent.get(url)
     .then(results=>{
@@ -88,6 +103,15 @@ function Trail(obj){
   this.condition_time = obj.conditionDate.slice(11,19);
 }
 
-app.listen(PORT, ()=>{
-  console.log(`listening on ${PORT}`);
-});
+
+client.connect()
+  .then(
+    app.listen(PORT, ()=>{
+      console.log(`listening on ${PORT}`);
+    })
+  )
+  .catch(err=>{
+    console.log('Error connecting');
+    console.error(err);
+    response.status(500).send(err);
+  });
