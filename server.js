@@ -22,11 +22,12 @@ app.get('/location', (request, response)=>{
   client.query(sqlGet, safeGetValues)
     .then(dbResults=>{
       if(dbResults.rowCount>0){
-        console.log('Data found in db.');
+        console.log('Location data found in db.');
         let dbData = dbResults.rows[0];
         response.send(dbData);
       } else{
-        console.log('Data not found in db, getting from API...')
+        console.log('Location data not found in db, getting from API...');
+        let url = `https://us1.locationiq.com/v1/search.php?key=${process.env.GEOCODE_API_KEY}&q=${cityQuery}&format=json`;
         superagent.get(url)
           .then(apiResults=>{
             let geoData = apiResults.body;
@@ -39,11 +40,9 @@ app.get('/location', (request, response)=>{
       }
     })
     .catch(err=>{
-      console.log('Error during data check.')
       console.error(err);
       response.status(500).send(err);
     });
-  let url = `https://us1.locationiq.com/v1/search.php?key=${process.env.GEOCODE_API_KEY}&q=${cityQuery}&format=json`;
 });
 
 function City(city, obj){
@@ -56,14 +55,34 @@ function City(city, obj){
 app.get('/weather', (request,response)=>{
   let queryLatitude = request.query.latitude;
   let queryLongitude = request.query.longitude;
-  let url = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${queryLatitude},${queryLongitude}`;
-  superagent.get(url)
-    .then(results=>{
-      let weatherDataDaily = results.body.daily.data;
-      let responseData = weatherDataDaily.map(day=>{
-        return new Weather(day);
-      });
-      response.send(responseData);
+  let sqlGet = 'SELECT * FROM forecasts WHERE latitude = $1 AND longitude = $2';
+  let safeGetValues = [queryLatitude, queryLongitude];
+  client.query(sqlGet, safeGetValues)
+    .then(dbResults=>{
+      
+      if(dbResults.rows.length>0){
+        console.log('Weather data found in db.');
+        let dbData = dbResults.rows;
+        response.send(dbData);
+      } else{
+        let url = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${queryLatitude},${queryLongitude}`;
+        superagent.get(url)
+          .then(results=>{
+            console.log('Weather data not found in db, getting from API...');
+            let responseLat = results.body.latitude;
+            let responseLon = results.body.longitude;
+            let weatherDataDaily = results.body.daily.data;
+            let responseData = weatherDataDaily.map(day=>{
+              return new DailyForecast(responseLat, responseLon, day);
+            });
+            let sqlSend = 'INSERT INTO forecasts(latitude, longitude, forecast, time, retrieved) VALUES ($1, $2, $3, $4, $5);';
+            responseData.forEach((forecast)=>{
+              let safeSendValues = [forecast.latitude, forecast.longitude, forecast.forecast, forecast.time, forecast.retrieved];
+              client.query(sqlSend, safeSendValues);
+            })
+            response.send(responseData);
+          })
+      }
     })
     .catch(err=>{
       console.error(err);
@@ -71,9 +90,12 @@ app.get('/weather', (request,response)=>{
     });
 });
 
-function Weather(obj){
+function DailyForecast(lat, lon, obj){
+  this.latitude = lat;
+  this.longitude = lon;
   this.forecast = obj.summary;
   this.time = new Date(obj.time * 1000).toDateString();
+  this.retrieved = new Date().toUTCString();
 }
 
 app.get('/trails', (request, response)=>{
