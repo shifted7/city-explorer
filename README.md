@@ -1,7 +1,7 @@
 # city-explorer
 
 **Author** Andrew Casper
-**Collaborators** Alex P day 1 lab-06 Brody R day 2 lab-07
+**Collaborators** Alex P day 1 lab-06 Brody R day 2 lab-07 Steven 
 **Version** 1.0.0
 
 
@@ -25,6 +25,17 @@ Start time: 9:30am
 Finish time: 12:30pm
 
 Actual time needed to complete: 3 hours
+
+
+Number and name of feature: lab 8 - Persistence
+
+Estimate of time needed to complete: 4 hours
+
+Start time: 9:00am
+
+Finish time: 6:30pm
+
+Actual time needed to complete: 9 hours
 
 
 ## Overview

@@ -17,29 +17,33 @@ const PORT = process.env.PORT || 3001;
 
 app.get('/location', (request, response)=>{
   let cityQuery = request.query.city;
-  console.log(cityQuery);
-  
-  let SQLget = 'SELECT * FROM locations WHERE search_query="seattle"';
-  let safeValues = [cityQuery];
-  client.query(SQLget)
-    .then(results=>{
-      console.log(results.rows);
+  let sqlGet = 'SELECT * FROM locations WHERE search_query = $1';
+  let safeGetValues = [cityQuery];
+  client.query(sqlGet, safeGetValues)
+    .then(dbResults=>{
+      if(dbResults.rowCount>0){
+        console.log('Data found in db.');
+        let dbData = dbResults.rows[0];
+        response.send(dbData);
+      } else{
+        console.log('Data not found in db, getting from API...')
+        superagent.get(url)
+          .then(apiResults=>{
+            let geoData = apiResults.body;
+            let newCity = new City(cityQuery, geoData[0]);
+            let sqlSend = 'INSERT INTO locations(search_query, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4);';
+            let safeSendValues = [newCity.search_query, newCity.formatted_query, newCity.latitude, newCity.longitude];
+            client.query(sqlSend, safeSendValues);
+            response.send(newCity);
+          })
+      }
     })
     .catch(err=>{
+      console.log('Error during data check.')
       console.error(err);
       response.status(500).send(err);
     });
   let url = `https://us1.locationiq.com/v1/search.php?key=${process.env.GEOCODE_API_KEY}&q=${cityQuery}&format=json`;
-  superagent.get(url)
-    .then(results=>{
-      let geoData = results.body;
-      let newCity = new City(cityQuery, geoData[0]);
-      response.send(newCity);
-    })
-    .catch(err=>{
-      console.error(err);
-      response.status(500).send(err);
-    });
 });
 
 function City(city, obj){
