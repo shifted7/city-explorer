@@ -17,8 +17,5 @@ CREATE TABLE forecasts(
     retrieved VARCHAR(255)
     );
 
-CREATE TABLE trails();
-
-
 SELECT * FROM locations;
 SELECT * FROM forecasts;
